@@ -25,6 +25,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/golang/glog"
 	"github.com/google/cadvisor/client"
+	"github.com/openshift/origin/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -108,7 +109,9 @@ func startAllInOne() {
 	}, 0)
 
 	// initialize OpenShift API
-	storage := map[string]apiserver.RESTStorage{}
+	storage := map[string]apiserver.RESTStorage{
+		"templateConfigs": template.NewStorage(),
+	}
 
 	osMux := http.NewServeMux()
 
