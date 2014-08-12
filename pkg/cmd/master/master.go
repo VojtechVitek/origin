@@ -26,6 +26,7 @@ import (
 	"github.com/google/cadvisor/client"
 	"github.com/openshift/origin/pkg/api"
 	"github.com/openshift/origin/pkg/service"
+	"github.com/openshift/origin/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -100,7 +101,8 @@ func startAllInOne() {
 
 	// initialize OpenShift API
 	storage := map[string]apiserver.RESTStorage{
-		"services": service.NewRESTStorage(service.MakeMemoryRegistry()),
+		"services":        service.NewRESTStorage(service.MakeMemoryRegistry()),
+		"templateConfigs": template.NewStorage(),
 	}
 	osAddr := "127.0.0.1:8080"
 	osPrefix := "/osapi/v1beta1"

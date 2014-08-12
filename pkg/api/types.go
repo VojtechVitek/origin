@@ -4,6 +4,8 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta1"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/conversion"
+	"github.com/openshift/origin/pkg/config"
+	"github.com/openshift/origin/pkg/template/templateapi"
 )
 
 type ServiceList struct {
@@ -44,6 +46,8 @@ func init() {
 	scheme.AddKnownTypes("",
 		ServiceList{},
 		Service{},
+		config.Config{},
+		templateapi.TemplateConfig{},
 		api.Status{},
 		api.ServerOp{},
 		api.ServerOpList{},
@@ -51,6 +55,8 @@ func init() {
 	scheme.AddKnownTypes("v1beta1",
 		ServiceList{},
 		Service{},
+		config.Config{},
+		templateapi.TemplateConfig{},
 		v1beta1.Status{},
 		v1beta1.ServerOp{},
 		v1beta1.ServerOpList{},
