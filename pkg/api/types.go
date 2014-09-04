@@ -5,7 +5,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta1"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/conversion"
 	"github.com/openshift/origin/pkg/config"
-	"github.com/openshift/origin/pkg/template/templateapi"
+	templateapi "github.com/openshift/origin/pkg/template/api"
 )
 
 type ServiceList struct {
