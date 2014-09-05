@@ -37,7 +37,10 @@ func NewExpressionValueGenerator(seed *rand.Rand) (ExpressionValueGenerator, err
 	return ExpressionValueGenerator{seed: seed}, nil
 }
 
-func (g ExpressionValueGenerator) GenerateValue(expression string) (interface{}, error) {
+// GenerateValue generate values based on the expression string. The expression
+// is a pseudo-regex formatted string. See the ExpressionValueGenerator for
+// details.
+func (g ExpressionValueGenerator) GenerateValue(expression string) (string, error) {
 	for {
 		r := generatorsExp.FindStringIndex(expression)
 		if r == nil {
@@ -61,6 +64,8 @@ func (g ExpressionValueGenerator) GenerateValue(expression string) (interface{},
 	return expression, nil
 }
 
+// alphabetSlice produce a slice of string that contains all characters within a
+// range specified using the from and to parameters.
 func alphabetSlice(from, to byte) (string, error) {
 	leftPos := strings.Index(Ascii, string(from))
 	rightPos := strings.LastIndex(Ascii, string(to))
@@ -70,6 +75,8 @@ func alphabetSlice(from, to byte) (string, error) {
 	return Ascii[leftPos:rightPos], nil
 }
 
+// replaceWithGenerated replace all occurences of expression in the string using
+// the randomely generated values corresponding to that expressions.
 func replaceWithGenerated(s *string, expression string, ranges [][]byte, length int, seed *rand.Rand) error {
 	var alphabet string
 	for _, r := range ranges {
@@ -96,6 +103,8 @@ func replaceWithGenerated(s *string, expression string, ranges [][]byte, length 
 	return nil
 }
 
+// findExpressionPos searches the provided string for the valid expressions and
+// returns the expressions indexes.
 func findExpressionPos(s string) [][]byte {
 	matches := rangeExp.FindAllStringIndex(s, -1)
 	result := make([][]byte, len(matches))
@@ -105,22 +114,20 @@ func findExpressionPos(s string) [][]byte {
 	return result
 }
 
-func parseLength(s string) (int, error) {
-	lengthStr := string(s[strings.LastIndex(s, "{")+1 : len(s)-1])
-	l, _ := strconv.Atoi(lengthStr)
-	//TODO: We do need to set a better limit for the number of generated characters.
-	if l > 0 && l <= 255 {
-		return l, nil
-	} else {
-		return 0, fmt.Errorf("Range must be within [1-255] characters (%s)", lengthStr)
-	}
-}
-
+// rangesAndLength extracts the expression ranges (eg. [A-Z0-9]) and the length
+// (eg. {3}). This helper is also doing validation of the expression syntax and
+// the length (must be within 1..255).
 func rangesAndLength(s string) (string, int, error) {
 	expr := s[0:strings.LastIndex(s, "{")]
 	if !expressionExp.MatchString(expr) {
 		return "", 0, fmt.Errorf("Malformed expresion syntax: %s", expr)
 	}
-	length, err := parseLength(s)
-	return expr, length, err
+
+	length, _ := strconv.Atoi(s[strings.LastIndex(s, "{")+1 : len(s)-1])
+	// TODO: We do need to set a better limit for the number of generated characters.
+	if length > 0 && length <= 255 {
+		return expr, length, nil
+	} else {
+		return "", 0, fmt.Errorf("Range must be within [1-255] characters (%d)", length)
+	}
 }
