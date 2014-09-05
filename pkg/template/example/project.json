@@ -8,19 +8,19 @@
       "name": "ADMIN_USERNAME",
       "description": "Guestbook administrator username",
       "type": "string",
-      "generate": "admin[A-Z0-9]{3}"
+      "expression": "admin[A-Z0-9]{3}"
     },
     {
       "name": "ADMIN_PASSWORD",
       "description": "Guestboot administrator password",
       "type": "string",
-      "generate": "[a-zA-Z0-9]{8}"
+      "expression": "[a-zA-Z0-9]{8}"
     },
     {
       "name": "REDIS_PASSWORD",
       "description": "The password Redis use for communication",
       "type": "string",
-      "generate": "[a-zA-Z0-9]{8}"
+      "expression": "[a-zA-Z0-9]{8}"
     }
   ],
   "items": [

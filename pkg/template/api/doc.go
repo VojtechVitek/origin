@@ -1,2 +1,2 @@
-// Package templateapi includes all types related to template package.
+// Package api includes all types related to template package.
 package api

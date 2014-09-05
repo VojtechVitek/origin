@@ -72,9 +72,9 @@ func ProcessEnvParameters(t *api.TemplateConfig) error {
 }
 
 // GenerateParameterValue generates Value for each Parameter of the given
-// Template that has Generate field specified and doesn't have any Value yet.
+// Template that has Expression field specified and doesn't have any Value yet.
 //
-// Examples of what certain Generate field values generate:
+// Examples of what certain Expression field values generate:
 //   - "test[0-9]{1}x" => "test7x"
 //   - "[0-1]{8}" => "01001100"
 //   - "0x[A-F0-9]{4}" => "0xB3AF"
@@ -84,13 +84,13 @@ func ProcessEnvParameters(t *api.TemplateConfig) error {
 func GenerateParameterValues(t *api.TemplateConfig, seed *rand.Rand) error {
 	for i, _ := range t.Parameters {
 		p := &t.Parameters[i]
-		if p.Generate != "" && p.Value == "" {
+		if p.Expression != "" && p.Value == "" {
 			// Inherit the seed from parameter
 			generator, err := generator.NewExpressionValueGenerator(seed)
 			if err != nil {
 				return err
 			}
-			value, err := generator.GenerateValue(p.Generate)
+			value, err := generator.GenerateValue(p.Expression)
 			if err != nil {
 				return err
 			}

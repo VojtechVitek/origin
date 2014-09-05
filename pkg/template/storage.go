@@ -1,6 +1,7 @@
 package template
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/openshift/origin/pkg/template/api/validation"
 )
 
+// Storage is an implementation of RESTStorage for the api server.
 type Storage struct{}
 
 // NewStorage returns a new apiserver.RESTStorage
@@ -22,11 +24,11 @@ func NewStorage() apiserver.RESTStorage {
 }
 
 func (s *Storage) List(selector labels.Selector) (interface{}, error) {
-	return nil, fmt.Errorf("TemplateConfig can only be created.")
+	return nil, errors.New("TemplateConfig can only be created.")
 }
 
 func (s *Storage) Get(id string) (interface{}, error) {
-	return nil, fmt.Errorf("TemplateConfig can only be created.")
+	return nil, errors.New("TemplateConfig can only be created.")
 }
 
 func (s *Storage) New() interface{} {
@@ -35,21 +37,21 @@ func (s *Storage) New() interface{} {
 
 func (s *Storage) Delete(id string) (<-chan interface{}, error) {
 	return apiserver.MakeAsync(func() (interface{}, error) {
-		return nil, fmt.Errorf("TemplateConfig can only be created.")
+		return nil, errors.New("TemplateConfig can only be created.")
 	}), nil
 }
 
 func (s *Storage) Update(minion interface{}) (<-chan interface{}, error) {
-	return nil, fmt.Errorf("TemplateConfig can only be created.")
+	return nil, errors.New("TemplateConfig can only be created.")
 }
 
 func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {
 	t, ok := obj.(*api.TemplateConfig)
 	if !ok {
-		return nil, fmt.Errorf("Not a template config.")
+		return nil, errors.New("Not a template config.")
 	}
 	if errs := validation.ValidateTemplateConfig(t); len(errs) > 0 {
-		return nil, fmt.Errorf("Invalid template config: %#v", errs)
+		return nil, errors.New(fmt.Sprintf("Invalid template config: %#v", errs))
 	}
 	return apiserver.MakeAsync(func() (interface{}, error) {
 		GenerateParameterValues(t, rand.New(rand.NewSource(time.Now().UnixNano())))

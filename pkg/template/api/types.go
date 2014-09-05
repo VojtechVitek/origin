@@ -11,6 +11,6 @@ type Parameter struct {
 	Name        string `json:"name" yaml:"name"`
 	Description string `json:"description" yaml:"description"`
 	Type        string `json:"type" yaml:"type"`
-	Generate    string `json:"generate,omitempty" yaml:"generate,omitempty"`
+	Expression  string `json:"expression,omitempty" yaml:"expression,omitempty"`
 	Value       string `json:"value,omitempty" yaml:"value,omitempty"`
 }
