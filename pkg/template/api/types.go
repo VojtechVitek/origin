@@ -6,11 +6,8 @@ import (
 )
 
 type TemplateConfig struct {
-	baseapi.JSONBase `json:",inline" yaml:",inline"`
-	Name             string      `yaml:"name" json:"name"`
-	Description      string      `yaml:"description" json:"description"`
-	Parameters       []Parameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	config.Config    `json:",inline" yaml:",inline"`
+	Parameters    []Parameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	config.Config `json:",inline" yaml:",inline"`
 }
 
 type Parameter struct {
