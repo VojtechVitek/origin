@@ -3,8 +3,9 @@ package validation
 import (
 	"regexp"
 
+	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	errs "github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"
-	//. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
+	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
 
 	. "github.com/openshift/origin/pkg/template/api"
 	"github.com/openshift/origin/pkg/template/generator"
@@ -28,15 +29,19 @@ func ValidateTemplateConfig(config *TemplateConfig) (list errs.ErrorList) {
 	if config.ID == "" {
 		list = append(list, errs.NewInvalid("Config.ID", "", nil))
 	}
-	/*for i := range config.Services {
-		list = append(list, ValidateService(&config.Services[i])...)
+	for _, item := range config.Items {
+		switch obj := item.Object.(type) {
+		case *baseapi.ReplicationController:
+			list = append(list, ValidateReplicationController(obj)...)
+		case *baseapi.Pod:
+			list = append(list, ValidatePod(obj)...)
+		case *baseapi.Service:
+			list = append(list, ValidateService(obj)...)
+		default:
+			//TODO print the Kind
+			list = append(list, errs.NewInvalid("Config.Items", "", nil))
+		}
 	}
-	for i := range config.Pods {
-		list = append(list, ValidatePod(&config.Pods[i])...)
-	}
-	for i := range config.ReplicationControllers {
-		list = append(list, ValidateReplicationController(&config.ReplicationControllers[i])...)
-	}*/
 	for i := range config.Parameters {
 		list = append(list, ValidateParameter(&config.Parameters[i])...)
 	}

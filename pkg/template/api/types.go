@@ -6,8 +6,8 @@ import (
 )
 
 type TemplateConfig struct {
-	Parameters    []Parameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	config.Config `json:",inline" yaml:",inline"`
+	Parameters    []Parameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 }
 
 type Parameter struct {
