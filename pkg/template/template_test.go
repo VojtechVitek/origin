@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/openshift/origin/pkg/template/api"
 )
 

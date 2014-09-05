@@ -8,7 +8,7 @@ import (
 
 func init() {
 	runtime.AddKnownTypes("v1beta1",
-		templateapi.TemplateConfig{},
 		config.Config{},
+		templateapi.TemplateConfig{},
 	)
 }

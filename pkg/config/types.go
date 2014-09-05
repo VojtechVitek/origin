@@ -11,3 +11,8 @@ type Config struct {
 	Description  string           `yaml:"description" json:"description"`
 	Items        []runtime.Object `yaml:"items" json:"items"`
 }
+
+func init() {
+	runtime.AddKnownTypes("v1beta1", Config{})
+	runtime.AddKnownTypes("", Config{})
+}
