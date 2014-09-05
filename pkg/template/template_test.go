@@ -7,15 +7,9 @@ import (
 	"math/rand"
 	"testing"
 
-	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta1"
+	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/api/v1beta1"
 	"github.com/openshift/origin/pkg/template/api"
 )
-
-// TODO: In this test, we need to access Kubernetes types so Decode() will
-// recognize them. To do that, you need to register all known Kubernetes types
-// here again. As a workaround, you have to import the Kubernetes 'api' package
-// to trigger the v1beta1.init() function.
-const fakeInit = baseapi.PodRunning
 
 func TestNewTemplate(t *testing.T) {
 	var template api.TemplateConfig
