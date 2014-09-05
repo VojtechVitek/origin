@@ -94,7 +94,7 @@ func GenerateParameterValues(t *api.TemplateConfig, seed *rand.Rand) error {
 			if err != nil {
 				return err
 			}
-			p.Value = value.(string)
+			p.Value = value
 		}
 	}
 	return nil
