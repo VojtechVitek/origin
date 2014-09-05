@@ -8,7 +8,6 @@ import (
 	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
 
 	. "github.com/openshift/origin/pkg/template/api"
-	"github.com/openshift/origin/pkg/template/generator"
 )
 
 var parameterNameExp = regexp.MustCompile(`^[a-zA-Z0-9\_]+$`)
@@ -17,9 +16,6 @@ var parameterNameExp = regexp.MustCompile(`^[a-zA-Z0-9\_]+$`)
 func ValidateParameter(param *Parameter) (list errs.ErrorList) {
 	if !parameterNameExp.MatchString(param.Name) {
 		list = append(list, errs.NewInvalid("Parameter.Name", param.Name, nil))
-	}
-	if !generator.MatchesGeneratorExpression(param.Generate) {
-		list = append(list, errs.NewInvalid("Parameter.Generate", param.Name, nil))
 	}
 	return
 }

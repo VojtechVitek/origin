@@ -33,11 +33,7 @@ var (
 	expressionExp = regexp.MustCompile(`\[(\\w|\\d|\\a)|([a-zA-Z0-9]\-[a-zA-Z0-9])+\]`)
 )
 
-func init() {
-	RegisterGenerator(generatorsExp, func(seed *rand.Rand) (GeneratorInterface, error) { return newExpressionValueGenerator(seed) })
-}
-
-func newExpressionValueGenerator(seed *rand.Rand) (ExpressionValueGenerator, error) {
+func NewExpressionValueGenerator(seed *rand.Rand) (ExpressionValueGenerator, error) {
 	return ExpressionValueGenerator{seed: seed}, nil
 }
 
@@ -112,8 +108,7 @@ func findExpressionPos(s string) [][]byte {
 func parseLength(s string) (int, error) {
 	lengthStr := string(s[strings.LastIndex(s, "{")+1 : len(s)-1])
 	l, _ := strconv.Atoi(lengthStr)
-	// FIXME: We do need to set a better limit for the number of generated
-	// characters.
+	//TODO: We do need to set a better limit for the number of generated characters.
 	if l > 0 && l <= 255 {
 		return l, nil
 	} else {

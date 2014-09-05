@@ -86,7 +86,7 @@ func GenerateParameterValues(t *api.TemplateConfig, seed *rand.Rand) error {
 		p := &t.Parameters[i]
 		if p.Generate != "" && p.Value == "" {
 			// Inherit the seed from parameter
-			generator, err := generator.New(seed)
+			generator, err := generator.NewExpressionValueGenerator(seed)
 			if err != nil {
 				return err
 			}
