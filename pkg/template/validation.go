@@ -12,36 +12,40 @@ import (
 var parameterNameExp = regexp.MustCompile(`^[a-zA-Z0-9\_]+$`)
 
 // ValidateParameter tests if required fields in the Parameter are set.
-func ValidateParameter(param *Parameter) errs.ErrorList {
+func ValidateParameter(param *Parameter) error {
 	allErrs := errs.ErrorList{}
 	if !parameterNameExp.MatchString(param.Name) {
-		allErrs = append(allErrs, errs.NewInvalid("Parameter.Name", param.Name))
+		return errs.NewInvalid("Parameter.Name", param.Name, allErrs)
 	}
 	if !generator.MatchesGeneratorExpression(param.Generate) {
-		allErrs = append(allErrs, errs.NewNotSupported("Parameter.Generate", param.Name))
+		return errs.NewInvalid("Parameter.Generate", param.Name, allErrs)
 	}
-	return allErrs
+	return nil
 }
 
 // ValidateTemplateConfig tests if required fields in the TemplateConfig are set.
-func ValidateTemplateConfig(config *TemplateConfig) errs.ErrorList {
+func ValidateTemplateConfig(config *TemplateConfig) error {
 	allErrs := errs.ErrorList{}
 	if config.ID == "" {
-		allErrs = append(allErrs, errs.NewInvalid("Config.ID", ""))
+		return errs.NewInvalid("Config.ID", "", allErrs)
 	}
 	/*
-		for i := range config.Services {
-			allErrs = append(allErrs, api.ValidateService(&config.Services[i])...)
+			for i := range config.Services {
+				allErrs = append(allErrs, api.ValidateService(&config.Services[i])...)
+			}
+			for i := range config.Pods {
+				allErrs = append(allErrs, api.ValidatePod(&config.Pods[i])...)
+			}
+			for i := range config.ReplicationControllers {
+				allErrs = append(allErrs, api.ValidateReplicationController(&config.ReplicationControllers[i])...)
+			}
+
+		for i := range config.Parameters {
+			allErrs = append(allErrs, ValidateParameter(&config.Parameters[i]))
 		}
-		for i := range config.Pods {
-			allErrs = append(allErrs, api.ValidatePod(&config.Pods[i])...)
-		}
-		for i := range config.ReplicationControllers {
-			allErrs = append(allErrs, api.ValidateReplicationController(&config.ReplicationControllers[i])...)
+		if len(allErrs) > 0 {
+			return errs.NewInvalid()
 		}
 	*/
-	for i := range config.Parameters {
-		allErrs = append(allErrs, ValidateParameter(&config.Parameters[i])...)
-	}
-	return allErrs
+	return nil
 }

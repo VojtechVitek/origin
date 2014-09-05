@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
 	"github.com/golang/glog"
 	"github.com/openshift/origin/pkg/template/api"
 	"github.com/openshift/origin/pkg/template/generator"
@@ -55,13 +56,13 @@ func ProcessEnvParameters(t *api.TemplateConfig) error {
 				&obj.DesiredState.PodTemplate.DesiredState.Manifest,
 				paramMap,
 			)
-			t.Items[i] = baseapi.APIObject{Object: *obj}
+			t.Items[i] = runtime.Object{Object: *obj}
 		case *baseapi.Pod:
 			subManifestParams(
 				&obj.DesiredState.Manifest,
 				paramMap,
 			)
-			t.Items[i] = baseapi.APIObject{Object: *obj}
+			t.Items[i] = runtime.Object{Object: *obj}
 		default:
 			glog.V(1).Infof("Unable to process parameters for resource '%T'.", obj)
 		}

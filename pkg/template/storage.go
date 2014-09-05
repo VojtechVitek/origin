@@ -47,9 +47,9 @@ func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("Not a template config.")
 	}
-	if errs := ValidateTemplateConfig(t); len(errs) > 0 {
-		return nil, fmt.Errorf("Invalid template config: %#v", errs)
-	}
+	//if errs := ValidateTemplateConfig(t); len(errs) > 0 {
+	//	return nil, fmt.Errorf("Invalid template config: %#v", errs)
+	//}
 	return apiserver.MakeAsync(func() (interface{}, error) {
 		GenerateParameterValues(t, rand.New(rand.NewSource(time.Now().UnixNano())))
 		err := ProcessEnvParameters(t)
