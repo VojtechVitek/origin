@@ -10,6 +10,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/openshift/origin/pkg/config"
 	"github.com/openshift/origin/pkg/template/api"
+	"github.com/openshift/origin/pkg/template/api/validation"
 )
 
 type Storage struct{}
@@ -47,9 +48,9 @@ func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("Not a template config.")
 	}
-	//if errs := ValidateTemplateConfig(t); len(errs) > 0 {
-	//	return nil, fmt.Errorf("Invalid template config: %#v", errs)
-	//}
+	if errs := validation.ValidateTemplateConfig(t); len(errs) > 0 {
+		return nil, fmt.Errorf("Invalid template config: %#v", errs)
+	}
 	return apiserver.MakeAsync(func() (interface{}, error) {
 		GenerateParameterValues(t, rand.New(rand.NewSource(time.Now().UnixNano())))
 		err := ProcessEnvParameters(t)
