@@ -8,14 +8,14 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/apiserver"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/labels"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
-	"github.com/openshift/origin/pkg/config"
+	configapi "github.com/openshift/origin/pkg/config/api"
 	"github.com/openshift/origin/pkg/template/api"
 	"github.com/openshift/origin/pkg/template/api/validation"
 )
 
 type Storage struct{}
 
-// NewRESTStorage returns a new apiserver.RESTStorage
+// NewStorage returns a new apiserver.RESTStorage
 // for the given TemplateConfig.
 func NewStorage() apiserver.RESTStorage {
 	return &Storage{}
@@ -58,8 +58,8 @@ func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {
 	}), nil
 }
 
-func (s *Storage) toApiConfig(t api.TemplateConfig) config.Config {
-	config := config.Config{
+func (s *Storage) toApiConfig(t api.TemplateConfig) configapi.Config {
+	config := configapi.Config{
 		Name:        t.Name,
 		Description: t.Description,
 		Items:       t.Items,
