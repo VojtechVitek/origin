@@ -8,15 +8,18 @@ import (
 	"strings"
 )
 
-// ExpressionValueGenerator generates random string based on the input
-// expression. The input expression is a string, which may contain
-// generator constructs matching "[a-zA-Z0-9]{length}" expression.
+// ExpressionValueGenerator implements Generator interface. It generates
+// random string based on the input expression. The input expression is
+// a string, which may contain "[a-zA-Z0-9]{length}" expression constructs,
+// defining range and length of the result characters.
 //
 // Examples:
 //   - "test[0-9]{1}x" => "test7x"
 //   - "[0-1]{8}" => "01001100"
 //   - "0x[A-F0-9]{4}" => "0xB3AF"
 //   - "[a-zA-Z0-9]{8}" => "hW4yQU5i"
+//
+//TODO: Support more regexp constructs.
 type ExpressionValueGenerator struct {
 	seed *rand.Rand
 }
@@ -33,14 +36,14 @@ var (
 	expressionExp = regexp.MustCompile(`\[(\\w|\\d|\\a)|([a-zA-Z0-9]\-[a-zA-Z0-9])+\]`)
 )
 
-func NewExpressionValueGenerator(seed *rand.Rand) (ExpressionValueGenerator, error) {
-	return ExpressionValueGenerator{seed: seed}, nil
+func NewExpressionValueGenerator(seed *rand.Rand) ExpressionValueGenerator {
+	return ExpressionValueGenerator{seed: seed}
 }
 
 // GenerateValue generate values based on the expression string. The expression
-// is a pseudo-regex formatted string. See the ExpressionValueGenerator for
+// is a pseudo-regex formatted string. See the ExpressionValueGenerator for more
 // details.
-func (g ExpressionValueGenerator) GenerateValue(expression string) (string, error) {
+func (g ExpressionValueGenerator) GenerateValue(expression string) (interface{}, error) {
 	for {
 		r := generatorsExp.FindStringIndex(expression)
 		if r == nil {

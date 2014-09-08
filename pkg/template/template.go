@@ -1,24 +1,51 @@
 package template
 
 import (
-	"math/rand"
+	"fmt"
 	"regexp"
 	"strings"
 
 	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/golang/glog"
+	"github.com/openshift/origin/pkg/config"
 	"github.com/openshift/origin/pkg/template/api"
-	"github.com/openshift/origin/pkg/template/generator"
+	. "github.com/openshift/origin/pkg/template/generator"
 )
 
 var parameterExp = regexp.MustCompile(`\$\{([a-zA-Z0-9\_]+)\}`)
 
-// AddCustomTemplateParameter allow to pass the custom parameter to the
-// template. It will replace the existing parameter, when it is already
+type TemplateProcessor struct {
+	Generators map[string]Generator
+}
+
+func NewTemplateProcessor(generators map[string]Generator) *TemplateProcessor {
+	return &TemplateProcessor{Generators: generators}
+}
+
+func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Config, error) {
+	if err := p.GenerateParameterValues(template); err != nil {
+		return nil, err
+	}
+	if err := p.ProcessEnvParameters(template); err != nil {
+		return nil, err
+	}
+
+	config := &config.Config{
+		Name:        template.Name,
+		Description: template.Description,
+		Items:       template.Items,
+	}
+	config.CreationTimestamp = util.Now()
+	return config, nil
+}
+
+// AddCustomTemplateParameter adds new custom parameter to the
+// template. It will replace the existing parameter, if already
 // defined in the template.
-func AddCustomTemplateParameter(p api.Parameter, t *api.TemplateConfig) {
-	if param := GetTemplateParameterByName(p.Name, t); param != nil {
+func (tp *TemplateProcessor) AddCustomTemplateParameter(p api.Parameter, t *api.TemplateConfig) {
+	if param := tp.GetTemplateParameterByName(p.Name, t); param != nil {
 		*param = p
 	} else {
 		t.Parameters = append(t.Parameters, p)
@@ -27,7 +54,7 @@ func AddCustomTemplateParameter(p api.Parameter, t *api.TemplateConfig) {
 
 // GetTemplateParameterByName will return the pointer to the Template
 // parameter based on the Parameter name.
-func GetTemplateParameterByName(name string, t *api.TemplateConfig) *api.Parameter {
+func (p *TemplateProcessor) GetTemplateParameterByName(name string, t *api.TemplateConfig) *api.Parameter {
 	for i, param := range t.Parameters {
 		if param.Name == name {
 			return &(t.Parameters[i])
@@ -42,7 +69,7 @@ func GetTemplateParameterByName(name string, t *api.TemplateConfig) *api.Paramet
 //
 // Parameter expression example:
 //   - ${PARAMETER_NAME}
-func ProcessEnvParameters(t *api.TemplateConfig) error {
+func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
 	// Make searching for given parameter name/value more effective
 	paramMap := make(map[string]string, len(t.Parameters))
 	for _, param := range t.Parameters {
@@ -52,13 +79,13 @@ func ProcessEnvParameters(t *api.TemplateConfig) error {
 	for i, item := range t.Items {
 		switch obj := item.Object.(type) {
 		case *baseapi.ReplicationController:
-			subManifestParams(
+			p.subManifestParams(
 				&obj.DesiredState.PodTemplate.DesiredState.Manifest,
 				paramMap,
 			)
 			t.Items[i] = runtime.Object{Object: *obj}
 		case *baseapi.Pod:
-			subManifestParams(
+			p.subManifestParams(
 				&obj.DesiredState.Manifest,
 				paramMap,
 			)
@@ -81,20 +108,22 @@ func ProcessEnvParameters(t *api.TemplateConfig) error {
 //   - "[a-zA-Z0-9]{8}" => "hW4yQU5i"
 //   - "password" => "hW4yQU5i"
 //   - "[GET:http://api.example.com/generateRandomValue]" => remote string
-func GenerateParameterValues(t *api.TemplateConfig, seed *rand.Rand) error {
+func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) error {
 	for i, _ := range t.Parameters {
 		p := &t.Parameters[i]
 		if p.Generate != "" && p.Value == "" {
-			// Inherit the seed from parameter
-			generator, err := generator.NewExpressionValueGenerator(seed)
-			if err != nil {
-				return err
+			generator, ok := tp.Generators["generate"]
+			if !ok {
+				return fmt.Errorf("Can't find expression generator.")
 			}
 			value, err := generator.GenerateValue(p.Generate)
 			if err != nil {
 				return err
 			}
-			p.Value = value
+			p.Value, ok = value.(string)
+			if !ok {
+				return fmt.Errorf("Can't convert the generated value %v to string.", value)
+			}
 		}
 	}
 	return nil
@@ -103,7 +132,7 @@ func GenerateParameterValues(t *api.TemplateConfig, seed *rand.Rand) error {
 // subManifestParams is a helper method that iterates over any ContainerManifest
 // object and search for the Env arrays.
 // Then it will do the substitution of parameters in the Env values.
-func subManifestParams(manifest *baseapi.ContainerManifest, params map[string]string) error {
+func (p *TemplateProcessor) subManifestParams(manifest *baseapi.ContainerManifest, params map[string]string) error {
 	for i, _ := range manifest.Containers {
 		for e, _ := range manifest.Containers[i].Env {
 			envValue := &manifest.Containers[i].Env[e].Value

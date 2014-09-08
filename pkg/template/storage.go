@@ -7,10 +7,10 @@ import (
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/apiserver"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/labels"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
-	"github.com/openshift/origin/pkg/config"
+
 	"github.com/openshift/origin/pkg/template/api"
 	"github.com/openshift/origin/pkg/template/api/validation"
+	. "github.com/openshift/origin/pkg/template/generator"
 )
 
 type Storage struct{}
@@ -44,26 +44,19 @@ func (s *Storage) Update(minion interface{}) (<-chan interface{}, error) {
 }
 
 func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {
-	t, ok := obj.(*api.TemplateConfig)
+	template, ok := obj.(*api.TemplateConfig)
 	if !ok {
 		return nil, fmt.Errorf("Not a template config.")
 	}
-	if errs := validation.ValidateTemplateConfig(t); len(errs) > 0 {
+	if errs := validation.ValidateTemplateConfig(template); len(errs) > 0 {
 		return nil, fmt.Errorf("Invalid template config: %#v", errs)
 	}
 	return apiserver.MakeAsync(func() (interface{}, error) {
-		GenerateParameterValues(t, rand.New(rand.NewSource(time.Now().UnixNano())))
-		err := ProcessEnvParameters(t)
-		return s.toApiConfig(*t), err
+		generators := map[string]Generator{
+			"generate": NewExpressionValueGenerator(rand.New(rand.NewSource(time.Now().UnixNano()))),
+		}
+		processor := NewTemplateProcessor(generators)
+		config, err := processor.Process(template)
+		return config, err
 	}), nil
-}
-
-func (s *Storage) toApiConfig(t api.TemplateConfig) config.Config {
-	config := config.Config{
-		Name:        t.Name,
-		Description: t.Description,
-		Items:       t.Items,
-	}
-	config.CreationTimestamp = util.Now()
-	return config
 }

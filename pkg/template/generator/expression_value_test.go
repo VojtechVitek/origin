@@ -5,15 +5,8 @@ import (
 	"testing"
 )
 
-func TestCreateGenerator(t *testing.T) {
-	_, err := NewExpressionValueGenerator(rand.New(rand.NewSource(1337)))
-	if err != nil {
-		t.Errorf("Failed to create expression value generator")
-	}
-}
-
 func TestExpressionValueGenerator(t *testing.T) {
-	generator, _ := NewExpressionValueGenerator(rand.New(rand.NewSource(1337)))
+	generator := NewExpressionValueGenerator(rand.New(rand.NewSource(1337)))
 
 	var tests = []struct {
 		Expression    string
@@ -39,7 +32,7 @@ func TestExpressionValueGenerator(t *testing.T) {
 }
 
 func TestExpressionValueGeneratorErrors(t *testing.T) {
-	generator, _ := NewExpressionValueGenerator(rand.New(rand.NewSource(1337)))
+	generator := NewExpressionValueGenerator(rand.New(rand.NewSource(1337)))
 
 	if v, err := generator.GenerateValue("[ABC]{3}"); err == nil {
 		t.Errorf("Expected [ABC]{3} to produce malformed syntax error (returned: %s)", v)
