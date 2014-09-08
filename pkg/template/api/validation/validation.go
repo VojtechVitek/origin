@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	kubeapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	errs "github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"
+	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"
 	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
 
 	. "github.com/openshift/origin/pkg/template/api"
@@ -14,39 +14,39 @@ import (
 var parameterNameExp = regexp.MustCompile(`^[a-zA-Z0-9\_]+$`)
 
 // ValidateParameter tests if required fields in the Parameter are set.
-func ValidateParameter(param *Parameter) (allErrs errs.ErrorList) {
+func ValidateParameter(param *Parameter) (errs ErrorList) {
 	if param.Name == "" {
-		allErrs = append(allErrs, errs.NewFieldRequired("name", param.Name))
+		errs = append(errs, NewFieldRequired("name", param.Name))
 		return
 	}
 	if !parameterNameExp.MatchString(param.Name) {
-		allErrs = append(allErrs, errs.NewFieldInvalid("name", param.Name))
+		errs = append(errs, NewFieldInvalid("name", param.Name))
 	}
 	return
 }
 
 // ValidateTemplateConfig tests if required fields in the TemplateConfig are set.
-func ValidateTemplateConfig(config *TemplateConfig) (allErrs errs.ErrorList) {
+func ValidateTemplateConfig(config *TemplateConfig) (errs ErrorList) {
 	if config.ID == "" {
-		allErrs = append(allErrs, errs.NewFieldRequired("id", config.ID))
+		errs = append(errs, NewFieldRequired("id", config.ID))
 	}
 	for i, item := range config.Items {
-		itemErr := errs.ErrorList{}
+		err := ErrorList{}
 		switch obj := item.Object.(type) {
 		case *kubeapi.ReplicationController:
-			itemErr = ValidateReplicationController(obj)
+			err = ValidateReplicationController(obj)
 		case *kubeapi.Pod:
-			itemErr = ValidatePod(obj)
+			err = ValidatePod(obj)
 		case *kubeapi.Service:
-			itemErr = ValidateService(obj)
+			err = ValidateService(obj)
 		default:
-			itemErr = append(itemErr, errs.NewFieldInvalid("kind", fmt.Sprintf("%T", item)))
+			err = append(err, NewFieldInvalid("kind", fmt.Sprintf("%T", item)))
 		}
-		allErrs = append(allErrs, itemErr.Prefix(fmt.Sprintf("items[%d]", i))...)
+		errs = append(errs, err.Prefix(fmt.Sprintf("items[%d]", i))...)
 	}
 	for i := range config.Parameters {
 		paramErr := ValidateParameter(&config.Parameters[i])
-		allErrs = append(allErrs, paramErr.Prefix(fmt.Sprintf("parameters[%d]", i))...)
+		errs = append(errs, paramErr.Prefix(fmt.Sprintf("parameters[%d]", i))...)
 	}
 	return
 }
