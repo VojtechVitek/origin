@@ -9,7 +9,8 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/golang/glog"
-	"github.com/openshift/origin/pkg/config"
+
+	config "github.com/openshift/origin/pkg/config/api"
 	"github.com/openshift/origin/pkg/template/api"
 	. "github.com/openshift/origin/pkg/template/generator"
 )
@@ -37,6 +38,8 @@ func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Confi
 		Description: template.Description,
 		Items:       template.Items,
 	}
+	config.ID = template.ID
+	config.Kind = "Config"
 	config.CreationTimestamp = util.Now()
 	return config, nil
 }
@@ -99,9 +102,9 @@ func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
 }
 
 // GenerateParameterValue generates Value for each Parameter of the given
-// Template that has Generate field specified and doesn't have any Value yet.
+// Template that has Expression field specified and doesn't have any Value yet.
 //
-// Examples of what certain Generate field values generate:
+// Examples of what certain Expression field values generate:
 //   - "test[0-9]{1}x" => "test7x"
 //   - "[0-1]{8}" => "01001100"
 //   - "0x[A-F0-9]{4}" => "0xB3AF"
@@ -111,12 +114,12 @@ func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
 func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) error {
 	for i, _ := range t.Parameters {
 		p := &t.Parameters[i]
-		if p.Generate != "" && p.Value == "" {
-			generator, ok := tp.Generators["generate"]
+		if p.Expression != "" && p.Value == "" {
+			generator, ok := tp.Generators["expression"]
 			if !ok {
 				return fmt.Errorf("Can't find expression generator.")
 			}
-			value, err := generator.GenerateValue(p.Generate)
+			value, err := generator.GenerateValue(p.Expression)
 			if err != nil {
 				return err
 			}
@@ -124,6 +127,7 @@ func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) erro
 			if !ok {
 				return fmt.Errorf("Can't convert the generated value %v to string.", value)
 			}
+			p.Expression = ""
 		}
 	}
 	return nil
