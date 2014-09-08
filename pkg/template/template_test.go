@@ -12,6 +12,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 
 	"github.com/openshift/origin/pkg/template/api"
+	"github.com/openshift/origin/pkg/template/api/validation"
 	. "github.com/openshift/origin/pkg/template/generator"
 )
 
@@ -24,7 +25,7 @@ func TestNewTemplate(t *testing.T) {
 	}
 }
 
-func TestCustomParameter(t *testing.T) {
+func TestAddParameter(t *testing.T) {
 	var template api.TemplateConfig
 
 	jsonData, _ := ioutil.ReadFile("example/project.json")
@@ -40,6 +41,20 @@ func TestCustomParameter(t *testing.T) {
 		if p.Value != "2" {
 			t.Errorf("Unable to replace the custom parameter value in template")
 		}
+	}
+}
+
+func TestValidParameter(t *testing.T) {
+	param := &api.Parameter{Name: "VALID_NAME", Value: "1"}
+	if len(validation.ValidateParameter(param)) != 0 {
+		t.Errorf("Expected zero validation errors on valid parameter name.")
+	}
+}
+
+func TestInvalidParameter(t *testing.T) {
+	param := &api.Parameter{Name: ">> INVALID NAME <<", Value: "1"}
+	if len(validation.ValidateParameter(param)) == 0 {
+		t.Errorf("Expected some validation errors on invalid parameter name.")
 	}
 }
 
