@@ -17,7 +17,9 @@ var parameterNameExp = regexp.MustCompile(`^[a-zA-Z0-9\_]+$`)
 func ValidateParameter(param *Parameter) (allErrs errs.ErrorList) {
 	if param.Name == "" {
 		allErrs = append(allErrs, errs.NewFieldRequired("name", param.Name))
-	} else if !parameterNameExp.MatchString(param.Name) {
+		return
+	}
+	if !parameterNameExp.MatchString(param.Name) {
 		allErrs = append(allErrs, errs.NewFieldInvalid("name", param.Name))
 	}
 	return
