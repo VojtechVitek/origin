@@ -12,26 +12,57 @@ NOTE: This is a very early prototype, and as such is designed for rapid iteratio
 
 Getting Started
 ---------------
+First, **get up and running with the** [**Contributing Guide**](CONTRIBUTING.adoc) (CONTRIBUTING.adoc). Note that Docker is not optional if you want to try out these example apps.
 
-You'll need Docker and the Go language compilation tools installed.
+From there, you can:
 
-1.  [Install Docker](https://docs.docker.com/installation/#installation)
-    and add your user to the 'docker' group
+1.  Run a build
 
-        $ sudo usermod -G docker -a `whoami`
-        $ newgrp docker
+        $ hack/build-go.sh
 
-    After doing this, confirm you can list docker processes as your user:
+2.  Start an OpenShift all-in-one server (includes everything you need to try OpenShift)
 
-        $ docker ps
+        $ output/go/bin/openshift start
 
-2.  [Install the Go language toolkit](http://golang.org/doc/install) and set your [GOPATH](http://golang.org/doc/code.html#GOPATH)
-3.  Clone this git repository through the Go tools:
+3.  In another terminal window, switch to the directory and start an app:
 
-        $ go get github.com/openshift/origin
         $ cd $GOPATH/src/github.com/openshift/origin
+        $ output/go/bin/openshift kube create pods -c examples/hello-openshift/hello-pod.json
 
-4.  Run a build
+Once that's done, open a browser on your machine and open [http://localhost:6061](http://localhost:6061); you should see a 'Welcome to OpenShift' message.
+
+### How Does This Work?
+
+This example is simply running the ['openshift/hello-openshift' Docker image](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L11) which is [built on Docker Hub](https://registry.hub.docker.com/u/openshift/hello-openshift/).
+
+* At the Docker level, that image [binds to port 8080](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello_openshift.go#L16) within a container and [prints out a simple 'Hello OpenShift' message on access](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello_openshift.go#L9).
+* At the Kubernetes level, we [map that bound port in the container](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L13) [to port 6061 on the host](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L14) so that we can access it via the host browser.
+
+### Other Examples
+For an example app that includes a databse and an admin front-end, try the [multiple container pod](https://github.com/openshift/origin/blob/master/examples/test-pod-multi.json). Also, coming soon: [Vagrant](http://www.vagrantup.com) environments supporting OpenShift - see [Kubernetes README.md](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/README.md) for now.
+
+Getting Started With Vagrant
+----------------------------
+
+To facilitate rapid development we've put together a Vagrantfile you can use to stand up a 
+development environment.  You'll need Vagrant installed - get it 
+[here](http://www.vagrantup.com/downloads).
+
+1.  Clone the project and change into the directory:
+
+        $ git clone git://github.com/openshift/origin
+        $ cd origin
+
+2.  Bring up the VM:
+
+        $ vagrant up
+
+3.  SSH in:
+
+        $ vagrant ssh
+        $ cd /vagrant
+
+4.  Run a build:
 
         $ hack/build-go.sh
 
@@ -39,17 +70,7 @@ You'll need Docker and the Go language compilation tools installed.
 
         $ output/go/bin/openshift start
 
-6.  In another terminal window, switch to the directory:
-
-        $ cd $GOPATH/src/github.com/openshift/origin
-        $ output/go/bin/openshift kube create pods -c examples/hello-openshift/hello-pod.json
-
-7.  You should then be able to open a browser on your machine and point to [http://localhost:6061](http://localhost:6061) and see a 'Welcome to OpenShift message'.  This example is simply [running the 'openshift/hello-openshift' Docker image](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L11) which is [built on Docker Hub](https://registry.hub.docker.com/u/openshift/hello-openshift/).  That [image binds to port 8080](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello_openshift.go#L16) and [prints out a simple 'Hello OpenShift' message on access](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello_openshift.go#L9).  In the Kubernetes definition, we map [that bound port in the container](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L13) [to port 6061 on the host](https://github.com/openshift/origin/blob/master/examples/hello-openshift/hello-pod.json#L14) so that we can access it via the host browser.
-
-    You can also try the [multiple container pod](https://github.com/openshift/origin/blob/master/examples/test-pod-multi.json) example that includes a database and an admin front-end.
-
-Coming soon: Vagrant environments supporting OpenShift - see [Kubernetes README.md](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/README.md) for now.
-
+You'll then be able to use the steps above to create pods, replication controllers, etc.
 
 Design Documents
 ----------------
@@ -66,7 +87,7 @@ API
 
 The OpenShift APIs are exposed at `http://localhost:8080/osapi/v1beta1/*`.
 
-* `http://localhost:8080/osapi/v1beta1/services` (placeholder)
+* coming soon
 
 The Kubernetes APIs are exposed at `http://localhost:8080/api/v1beta1/*`:
 
@@ -75,7 +96,7 @@ The Kubernetes APIs are exposed at `http://localhost:8080/api/v1beta1/*`:
 * `http://localhost:8080/api/v1beta1/replicationControllers`
 * `http://localhost:8080/api/v1beta1/operations`
 
-Several experimental API objects are being prototyped upstream, and are included here for integration testing:
+Several experimental API objects are being prototyped, and should be available soon at:
 
 * `http://localhost:8080/osapi/v1beta1/images`
 * `http://localhost:8080/osapi/v1beta1/imagesByRepository`
