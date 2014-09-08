@@ -19,7 +19,7 @@ import (
 //   - "0x[A-F0-9]{4}" => "0xB3AF"
 //   - "[a-zA-Z0-9]{8}" => "hW4yQU5i"
 //
-//TODO: Support more regexp constructs.
+// TODO: Support more regexp constructs.
 type ExpressionValueGenerator struct {
 	seed *rand.Rand
 }
