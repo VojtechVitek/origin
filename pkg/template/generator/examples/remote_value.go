@@ -3,7 +3,6 @@ package examples
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -21,8 +20,8 @@ type RemoteValueGenerator struct {
 var remoteExp = regexp.MustCompile(`\[GET\:(http(s)?:\/\/(.+))\]`)
 
 // NewRemoteValueGenerator creates new remote value generator.
-func NewRemoteValueGenerator(*rand.Rand) (RemoteValueGenerator, error) {
-	return RemoteValueGenerator{}, nil
+func NewRemoteValueGenerator() RemoteValueGenerator {
+	return RemoteValueGenerator{}
 }
 
 // GenerateValue fetches random value from an external url.
