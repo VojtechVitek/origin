@@ -38,7 +38,7 @@ func ValidateTemplateConfig(config *TemplateConfig) (allErrs errs.ErrorList) {
 		case *kubeapi.Service:
 			itemErr = ValidateService(obj)
 		default:
-			itemErr = append(itemErr, errs.NewFieldInvalid("kind", item))
+			itemErr = append(itemErr, errs.NewFieldInvalid("kind", fmt.Sprintf("%T", item)))
 		}
 		allErrs = append(allErrs, itemErr.Prefix(fmt.Sprintf("items[%d]", i))...)
 	}

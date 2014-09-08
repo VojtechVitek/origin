@@ -29,7 +29,7 @@ func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Confi
 	if err := p.GenerateParameterValues(template); err != nil {
 		return nil, err
 	}
-	if err := p.ProcessEnvParameters(template); err != nil {
+	if err := p.SubstituteParameters(template); err != nil {
 		return nil, err
 	}
 
@@ -47,17 +47,17 @@ func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Confi
 // AddCustomTemplateParameter adds new custom parameter to the
 // template. It will replace the existing parameter, if already
 // defined in the template.
-func (tp *TemplateProcessor) AddCustomTemplateParameter(p api.Parameter, t *api.TemplateConfig) {
-	if param := tp.GetTemplateParameterByName(p.Name, t); param != nil {
-		*param = p
+func (p *TemplateProcessor) AddParameter(t *api.TemplateConfig, param api.Parameter) {
+	if existing := p.GetParameterByName(t, param.Name); existing != nil {
+		*existing = param
 	} else {
-		t.Parameters = append(t.Parameters, p)
+		t.Parameters = append(t.Parameters, param)
 	}
 }
 
 // GetTemplateParameterByName will return the pointer to the Template
 // parameter based on the Parameter name.
-func (p *TemplateProcessor) GetTemplateParameterByName(name string, t *api.TemplateConfig) *api.Parameter {
+func (p *TemplateProcessor) GetParameterByName(t *api.TemplateConfig, name string) *api.Parameter {
 	for i, param := range t.Parameters {
 		if param.Name == name {
 			return &(t.Parameters[i])
@@ -66,32 +66,45 @@ func (p *TemplateProcessor) GetTemplateParameterByName(name string, t *api.Templ
 	return nil
 }
 
-// ProcessParameters searches the ReplicationControllers and Pods defined in the
-// TemplateConfig and substitutes the references to parameters with the parameter
-// values in the 'env' blocks defined for containers.
+// SubstituteParameters loops over all Environment variables defined for
+// all ReplicationController and Pod containers and substitutes all
+// Parameter expression occurances with their corresponding values.
 //
-// Parameter expression example:
+// Example of Parameter expression:
 //   - ${PARAMETER_NAME}
-func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
+func (p *TemplateProcessor) SubstituteParameters(t *api.TemplateConfig) error {
 	// Make searching for given parameter name/value more effective
 	paramMap := make(map[string]string, len(t.Parameters))
 	for _, param := range t.Parameters {
 		paramMap[param.Name] = param.Value
 	}
 
+	// manifestSubstituteParameters is a helper function that iterates
+	// over the given manifest.
+	substituteParametersInManifest := func(manifest *kubeapi.ContainerManifest) {
+		for i, _ := range manifest.Containers {
+			for e, _ := range manifest.Containers[i].Env {
+				envValue := &manifest.Containers[i].Env[e].Value
+				// Match all parameter expressions found in the given env var
+				for _, match := range parameterExp.FindAllStringSubmatch(*envValue, -1) {
+					// Substitute expression with its value, if corresponding parameter found
+					if len(match) > 1 {
+						if paramValue, found := paramMap[match[1]]; found {
+							*envValue = strings.Replace(*envValue, match[0], paramValue, 1)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	for i, item := range t.Items {
 		switch obj := item.Object.(type) {
 		case *kubeapi.ReplicationController:
-			p.subManifestParams(
-				&obj.DesiredState.PodTemplate.DesiredState.Manifest,
-				paramMap,
-			)
+			substituteParametersInManifest(&obj.DesiredState.PodTemplate.DesiredState.Manifest)
 			t.Items[i] = runtime.Object{Object: *obj}
 		case *kubeapi.Pod:
-			p.subManifestParams(
-				&obj.DesiredState.Manifest,
-				paramMap,
-			)
+			substituteParametersInManifest(&obj.DesiredState.Manifest)
 			t.Items[i] = runtime.Object{Object: *obj}
 		default:
 			glog.V(1).Infof("Unable to process parameters for resource '%T'.", obj)
@@ -101,52 +114,30 @@ func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
 	return nil
 }
 
-// GenerateParameterValue generates Value for each Parameter of the given
-// Template that has Expression field specified and doesn't have any Value yet.
+// GenerateParameterValues generates Value for each Parameter of the given
+// TemplateConfig that has Expression field specified and doesn't have any
+// Value yet.
 //
-// Examples of what certain Expression field values generate:
+// Examples (Expression => Value):
 //   - "test[0-9]{1}x" => "test7x"
 //   - "[0-1]{8}" => "01001100"
 //   - "0x[A-F0-9]{4}" => "0xB3AF"
 //   - "[a-zA-Z0-9]{8}" => "hW4yQU5i"
-//   - "password" => "hW4yQU5i"
-//   - "[GET:http://api.example.com/generateRandomValue]" => remote string
-func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) error {
+func (p *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) error {
 	for i, _ := range t.Parameters {
-		p := &t.Parameters[i]
-		if p.Expression != "" && p.Value == "" {
-			generator, ok := tp.Generators["expression"]
+		param := &t.Parameters[i]
+		if param.Expression != "" && param.Value == "" {
+			generator, ok := p.Generators["expression"]
 			if !ok {
 				return fmt.Errorf("Can't find expression generator.")
 			}
-			value, err := generator.GenerateValue(p.Expression)
+			value, err := generator.GenerateValue(param.Expression)
 			if err != nil {
 				return err
 			}
-			p.Value, ok = value.(string)
+			param.Value, ok = value.(string)
 			if !ok {
 				return fmt.Errorf("Can't convert the generated value %v to string.", value)
-			}
-		}
-	}
-	return nil
-}
-
-// subManifestParams is a helper method that iterates over any ContainerManifest
-// object and search for the Env arrays.
-// Then it will do the substitution of parameters in the Env values.
-func (p *TemplateProcessor) subManifestParams(manifest *kubeapi.ContainerManifest, params map[string]string) error {
-	for i, _ := range manifest.Containers {
-		for e, _ := range manifest.Containers[i].Env {
-			envValue := &manifest.Containers[i].Env[e].Value
-			// Match all parameter expressions found in the given env var
-			for _, match := range parameterExp.FindAllStringSubmatch(*envValue, -1) {
-				// Substitute expression with its value, if corresponding parameter found
-				if len(match) > 1 {
-					if paramValue, found := params[match[1]]; found {
-						*envValue = strings.Replace(*envValue, match[0], paramValue, 1)
-					}
-				}
 			}
 		}
 	}

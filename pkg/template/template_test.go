@@ -31,10 +31,10 @@ func TestCustomParameter(t *testing.T) {
 	json.Unmarshal(jsonData, &template)
 
 	processor := NewTemplateProcessor(nil)
-	processor.AddCustomTemplateParameter(api.Parameter{Name: "CUSTOM_PARAM", Value: "1"}, &template)
-	processor.AddCustomTemplateParameter(api.Parameter{Name: "CUSTOM_PARAM", Value: "2"}, &template)
+	processor.AddParameter(&template, api.Parameter{Name: "CUSTOM_PARAM", Value: "1"})
+	processor.AddParameter(&template, api.Parameter{Name: "CUSTOM_PARAM", Value: "2"})
 
-	if p := processor.GetTemplateParameterByName("CUSTOM_PARAM", &template); p == nil {
+	if p := processor.GetParameterByName(&template, "CUSTOM_PARAM"); p == nil {
 		t.Errorf("Unable to add a custom parameter to the template")
 	} else {
 		if p.Value != "2" {
@@ -53,13 +53,12 @@ func ExampleProcessTemplateParameters() {
 	}
 	processor := NewTemplateProcessor(generators)
 
-	// Define custom parameter for transformation:
-	customParam := api.Parameter{Name: "CUSTOM_PARAM1", Value: "1"}
-	processor.AddCustomTemplateParameter(customParam, &template)
+	// Define custom parameter for the transformation:
+	processor.AddParameter(&template, api.Parameter{Name: "CUSTOM_PARAM1", Value: "1"})
 
-	// Process the template config into the result config
+	// Transform the template config into the result config
 	config, _ := processor.Process(&template)
-	// Reset the timestamp
+	// Reset the timestamp for the output comparison
 	config.CreationTimestamp = util.Date(1980, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	result, _ := json.Marshal(config)
