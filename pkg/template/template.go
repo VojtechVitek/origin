@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	kubeapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/golang/glog"
@@ -81,13 +81,13 @@ func (p *TemplateProcessor) ProcessEnvParameters(t *api.TemplateConfig) error {
 
 	for i, item := range t.Items {
 		switch obj := item.Object.(type) {
-		case *baseapi.ReplicationController:
+		case *kubeapi.ReplicationController:
 			p.subManifestParams(
 				&obj.DesiredState.PodTemplate.DesiredState.Manifest,
 				paramMap,
 			)
 			t.Items[i] = runtime.Object{Object: *obj}
-		case *baseapi.Pod:
+		case *kubeapi.Pod:
 			p.subManifestParams(
 				&obj.DesiredState.Manifest,
 				paramMap,
@@ -127,7 +127,6 @@ func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) erro
 			if !ok {
 				return fmt.Errorf("Can't convert the generated value %v to string.", value)
 			}
-			p.Expression = ""
 		}
 	}
 	return nil
@@ -136,7 +135,7 @@ func (tp *TemplateProcessor) GenerateParameterValues(t *api.TemplateConfig) erro
 // subManifestParams is a helper method that iterates over any ContainerManifest
 // object and search for the Env arrays.
 // Then it will do the substitution of parameters in the Env values.
-func (p *TemplateProcessor) subManifestParams(manifest *baseapi.ContainerManifest, params map[string]string) error {
+func (p *TemplateProcessor) subManifestParams(manifest *kubeapi.ContainerManifest, params map[string]string) error {
 	for i, _ := range manifest.Containers {
 		for e, _ := range manifest.Containers[i].Env {
 			envValue := &manifest.Containers[i].Env[e].Value

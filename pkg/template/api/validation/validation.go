@@ -3,7 +3,7 @@ package validation
 import (
 	"regexp"
 
-	baseapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	kubeapi "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	errs "github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"
 	. "github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
 
@@ -27,11 +27,11 @@ func ValidateTemplateConfig(config *TemplateConfig) (list errs.ErrorList) {
 	}
 	for _, item := range config.Items {
 		switch obj := item.Object.(type) {
-		case *baseapi.ReplicationController:
+		case *kubeapi.ReplicationController:
 			list = append(list, ValidateReplicationController(obj)...)
-		case *baseapi.Pod:
+		case *kubeapi.Pod:
 			list = append(list, ValidatePod(obj)...)
-		case *baseapi.Service:
+		case *kubeapi.Service:
 			list = append(list, ValidateService(obj)...)
 		default:
 			//TODO print the Kind
