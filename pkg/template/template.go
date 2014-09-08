@@ -85,32 +85,13 @@ func (p *TemplateProcessor) SubstituteParameters(t *api.TemplateConfig) error {
 		paramMap[param.Name] = param.Value
 	}
 
-	// manifestSubstituteParameters is a helper function that iterates
-	// over the given manifest.
-	substituteParametersInManifest := func(manifest *kubeapi.ContainerManifest) {
-		for i, _ := range manifest.Containers {
-			for e, _ := range manifest.Containers[i].Env {
-				envValue := &manifest.Containers[i].Env[e].Value
-				// Match all parameter expressions found in the given env var
-				for _, match := range parameterExp.FindAllStringSubmatch(*envValue, -1) {
-					// Substitute expression with its value, if corresponding parameter found
-					if len(match) > 1 {
-						if paramValue, found := paramMap[match[1]]; found {
-							*envValue = strings.Replace(*envValue, match[0], paramValue, 1)
-						}
-					}
-				}
-			}
-		}
-	}
-
 	for i, item := range t.Items {
 		switch obj := item.Object.(type) {
 		case *kubeapi.ReplicationController:
-			substituteParametersInManifest(&obj.DesiredState.PodTemplate.DesiredState.Manifest)
+			p.substituteParametersInManifest(&obj.DesiredState.PodTemplate.DesiredState.Manifest, paramMap)
 			t.Items[i] = runtime.Object{Object: *obj}
 		case *kubeapi.Pod:
-			substituteParametersInManifest(&obj.DesiredState.Manifest)
+			p.substituteParametersInManifest(&obj.DesiredState.Manifest, paramMap)
 			t.Items[i] = runtime.Object{Object: *obj}
 		default:
 			glog.V(1).Infof("Unable to process parameters for resource '%T'.", obj)
@@ -118,6 +99,26 @@ func (p *TemplateProcessor) SubstituteParameters(t *api.TemplateConfig) error {
 	}
 
 	return nil
+}
+
+// substituteParametersInManifest is a helper function that iterates
+// over the given manifest and substitutes all Parameter expression
+// occurances with their corresponding values.
+func (p *TemplateProcessor) substituteParametersInManifest(manifest *kubeapi.ContainerManifest, paramMap map[string]string) {
+	for i, _ := range manifest.Containers {
+		for e, _ := range manifest.Containers[i].Env {
+			envValue := &manifest.Containers[i].Env[e].Value
+			// Match all parameter expressions found in the given env var
+			for _, match := range parameterExp.FindAllStringSubmatch(*envValue, -1) {
+				// Substitute expression with its value, if corresponding parameter found
+				if len(match) > 1 {
+					if paramValue, found := paramMap[match[1]]; found {
+						*envValue = strings.Replace(*envValue, match[0], paramValue, 1)
+					}
+				}
+			}
+		}
+	}
 }
 
 // GenerateParameterValues generates Value for each Parameter of the given
