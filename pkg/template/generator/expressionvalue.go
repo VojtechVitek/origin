@@ -11,7 +11,7 @@ import (
 // ExpressionValueGenerator implements Generator interface. It generates
 // random string based on the input expression. The input expression is
 // a string, which may contain "[a-zA-Z0-9]{length}" expression constructs,
-// defining range and length of the result characters.
+// defining range and length of the result random characters.
 //
 // Examples:
 //   - "test[0-9]{1}x" => "test7x"
@@ -36,13 +36,14 @@ var (
 	expressionExp = regexp.MustCompile(`\[(\\w|\\d|\\a)|([a-zA-Z0-9]\-[a-zA-Z0-9])+\]`)
 )
 
+// NewExpressionValueGenerator creates new ExpressionValueGenerator.
 func NewExpressionValueGenerator(seed *rand.Rand) ExpressionValueGenerator {
 	return ExpressionValueGenerator{seed: seed}
 }
 
-// GenerateValue generate values based on the expression string. The expression
-// is a pseudo-regex formatted string. See the ExpressionValueGenerator for more
-// details.
+// GenerateValue generates random string based on the input expression.
+// The input expression is a pseudo-regex formatted string. See
+// ExpressionValueGenerator for more details.
 func (g ExpressionValueGenerator) GenerateValue(expression string) (interface{}, error) {
 	for {
 		r := generatorsExp.FindStringIndex(expression)
@@ -67,8 +68,8 @@ func (g ExpressionValueGenerator) GenerateValue(expression string) (interface{},
 	return expression, nil
 }
 
-// alphabetSlice produce a slice of string that contains all characters within a
-// range specified using the from and to parameters.
+// alphabetSlice produces a string slice that contains all characters within
+// a specified range.
 func alphabetSlice(from, to byte) (string, error) {
 	leftPos := strings.Index(Ascii, string(from))
 	rightPos := strings.LastIndex(Ascii, string(to))
@@ -78,8 +79,8 @@ func alphabetSlice(from, to byte) (string, error) {
 	return Ascii[leftPos:rightPos], nil
 }
 
-// replaceWithGenerated replace all occurences of expression in the string using
-// the randomely generated values corresponding to that expressions.
+// replaceWithGenerated replaces all occurences of the given expression
+// in the string with random characters of the specified range and length.
 func replaceWithGenerated(s *string, expression string, ranges [][]byte, length int, seed *rand.Rand) error {
 	var alphabet string
 	for _, r := range ranges {
@@ -106,8 +107,8 @@ func replaceWithGenerated(s *string, expression string, ranges [][]byte, length 
 	return nil
 }
 
-// findExpressionPos searches the provided string for the valid expressions and
-// returns the expressions indexes.
+// findExpressionPos searches the given string for the valid expressions
+// and returns their corresponding indexes.
 func findExpressionPos(s string) [][]byte {
 	matches := rangeExp.FindAllStringIndex(s, -1)
 	result := make([][]byte, len(matches))
@@ -117,9 +118,9 @@ func findExpressionPos(s string) [][]byte {
 	return result
 }
 
-// rangesAndLength extracts the expression ranges (eg. [A-Z0-9]) and the length
-// (eg. {3}). This helper is also doing validation of the expression syntax and
-// the length (must be within 1..255).
+// rangesAndLength extracts the expression ranges (eg. [A-Z0-9]) and length
+// (eg. {3}). This helper function also validates the expression syntax and
+// it's length (must be within 1..255).
 func rangesAndLength(s string) (string, int, error) {
 	expr := s[0:strings.LastIndex(s, "{")]
 	if !expressionExp.MatchString(expr) {

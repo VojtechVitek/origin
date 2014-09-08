@@ -14,21 +14,20 @@ import (
 	. "github.com/openshift/origin/pkg/template/generator"
 )
 
-// Storage is an implementation of RESTStorage for the api server.
+// Storage implements RESTStorage for the TemplateConfig objects.
 type Storage struct{}
 
-// NewStorage returns a new apiserver.RESTStorage
-// for the given TemplateConfig.
+// NewStorage creates new RESTStorage for the TemplateConfig objects.
 func NewStorage() apiserver.RESTStorage {
 	return &Storage{}
 }
 
 func (s *Storage) List(selector labels.Selector) (interface{}, error) {
-	return nil, errors.New("TemplateConfig can only be created.")
+	return nil, errors.New("template.Storage.List() is not implemented.")
 }
 
 func (s *Storage) Get(id string) (interface{}, error) {
-	return nil, errors.New("TemplateConfig can only be created.")
+	return nil, errors.New("template.Storage.Get() is not implemented.")
 }
 
 func (s *Storage) New() interface{} {
@@ -37,12 +36,12 @@ func (s *Storage) New() interface{} {
 
 func (s *Storage) Delete(id string) (<-chan interface{}, error) {
 	return apiserver.MakeAsync(func() (interface{}, error) {
-		return nil, errors.New("TemplateConfig can only be created.")
+		return nil, errors.New("template.Storage.Delete() is not implemented.")
 	}), nil
 }
 
 func (s *Storage) Update(minion interface{}) (<-chan interface{}, error) {
-	return nil, errors.New("TemplateConfig can only be created.")
+	return nil, errors.New("template.Storage.Update() is not implemented.")
 }
 
 func (s *Storage) Create(obj interface{}) (<-chan interface{}, error) {

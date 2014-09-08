@@ -17,14 +17,21 @@ import (
 
 var parameterExp = regexp.MustCompile(`\$\{([a-zA-Z0-9\_]+)\}`)
 
+// TemplateProcessor transforms TemplateConfig objects into Config objects.
 type TemplateProcessor struct {
 	Generators map[string]Generator
 }
 
+// NewTemplateProcessor creates new TemplateProcessor and initializes
+// it's set of generators.
 func NewTemplateProcessor(generators map[string]Generator) *TemplateProcessor {
 	return &TemplateProcessor{Generators: generators}
 }
 
+// Process transforms TemplateConfig object into Config object. It generates
+// Parameter values using the defined set of generators first, and then it
+// substitutes all Parameter expression occurances with their corresponding
+// values (currently in the containers' Environment variables only).
 func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Config, error) {
 	if err := p.GenerateParameterValues(template); err != nil {
 		return nil, err
@@ -44,9 +51,8 @@ func (p *TemplateProcessor) Process(template *api.TemplateConfig) (*config.Confi
 	return config, nil
 }
 
-// AddCustomTemplateParameter adds new custom parameter to the
-// template. It will replace the existing parameter, if already
-// defined in the template.
+// AddParameter adds new custom parameter to the TemplateConfig. It overrides
+// the existing parameter, if already defined.
 func (p *TemplateProcessor) AddParameter(t *api.TemplateConfig, param api.Parameter) {
 	if existing := p.GetParameterByName(t, param.Name); existing != nil {
 		*existing = param
@@ -55,8 +61,8 @@ func (p *TemplateProcessor) AddParameter(t *api.TemplateConfig, param api.Parame
 	}
 }
 
-// GetTemplateParameterByName will return the pointer to the Template
-// parameter based on the Parameter name.
+// GetParameterByName searches for a Parameter in the TemplateConfig
+// based on it's name.
 func (p *TemplateProcessor) GetParameterByName(t *api.TemplateConfig, name string) *api.Parameter {
 	for i, param := range t.Parameters {
 		if param.Name == name {
