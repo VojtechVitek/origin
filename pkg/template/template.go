@@ -23,7 +23,7 @@ type TemplateProcessor struct {
 }
 
 // NewTemplateProcessor creates new TemplateProcessor and initializes
-// it's set of generators.
+// its set of generators.
 func NewTemplateProcessor(generators map[string]Generator) *TemplateProcessor {
 	return &TemplateProcessor{Generators: generators}
 }

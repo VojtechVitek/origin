@@ -120,7 +120,7 @@ func findExpressionPos(s string) [][]byte {
 
 // rangesAndLength extracts the expression ranges (eg. [A-Z0-9]) and length
 // (eg. {3}). This helper function also validates the expression syntax and
-// it's length (must be within 1..255).
+// its length (must be within 1..255).
 func rangesAndLength(s string) (string, int, error) {
 	expr := s[0:strings.LastIndex(s, "{")]
 	if !expressionExp.MatchString(expr) {

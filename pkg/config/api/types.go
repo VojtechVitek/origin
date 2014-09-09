@@ -10,6 +10,6 @@ type Config struct {
 	Name             string `yaml:"name" json:"name"`
 	Description      string `yaml:"description" json:"description"`
 	// TODO: This doesn't handle unregistered types. Define custom
-	//       []interface{} type and it's unmarshaller instead.
+	//       []interface{} type and its unmarshaller instead.
 	Items []runtime.Object `yaml:"items" json:"items"`
 }
